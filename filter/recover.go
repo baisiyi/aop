@@ -1,10 +1,11 @@
-# aop
-> 一个最小入侵业务的aop实现
+package filter
 
-## 使用方式
+import (
+	"context"
+	"fmt"
+	"github.com/baisiyi/aop"
+)
 
-### Register
-```go
 // 通过init自动组册
 func init() {
 	aop.Register(RecoverFilter())
@@ -21,26 +22,3 @@ func RecoverFilter() aop.Interceptor {
 		return next(ctx)
 	}
 }
-```
-
-
-### Execute
-
-```go
-package main
-
-import (
-    "github.com/baisiyi/aop"
-    _ "github.com/baisiyi/aop/filter"
-)
-
-
-func main() {
-	aop.Execute(context.Background(), run)
-}
-
-func run() error {
-	painc("here is your code")
-}
-
-```
