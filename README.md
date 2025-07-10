@@ -44,3 +44,21 @@ func run() error {
 }
 
 ```
+
+#### 更小粒度的代理每个接口
+```go
+
+http.Handle("/api/xxx", AOPMiddleware(myHandler))
+
+func AOPMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        err := aop.Execute(r.Context(), func(ctx context.Context) error {
+            next.ServeHTTP(w, r)
+            return nil
+		})
+        if err != nil {
+        // 错误处理
+        }
+    })
+}
+```
