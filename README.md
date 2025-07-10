@@ -12,29 +12,22 @@ func init() {
 
 // RecoverFilter filter实现
 func RecoverFilter() aop.Interceptor {
-	return func(ctx context.Context, next func(ctx context.Context) error) error {
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Println("Recovered from panic:", r)
-			}
-		}()
-		return next(ctx)
-	}
+    return func(ctx context.Context, req interface{}, next aop.InterceptorFunc) (interface{}, error) {
+        defer func() {
+            if r := recover(); r != nil {
+                fmt.Println("Recovered from panic:", r)
+            }
+        }()
+        return next(ctx, req)
+    }
 }
 ```
 
 
 ### Execute
 
+#### 不合理的使用
 ```go
-package main
-
-import (
-    "github.com/baisiyi/aop"
-    _ "github.com/baisiyi/aop/filter"
-)
-
-
 func main() {
 	aop.Execute(context.Background(), run)
 }
@@ -45,20 +38,8 @@ func run() error {
 
 ```
 
-#### 更小粒度的代理每个接口
+#### 合理的使用
 ```go
-
+// 通过中间件方式引入拦截器插件
 http.Handle("/api/xxx", AOPMiddleware(myHandler))
-
-func AOPMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        err := aop.Execute(r.Context(), func(ctx context.Context) error {
-            next.ServeHTTP(w, r)
-            return nil
-		})
-        if err != nil {
-        // 错误处理
-        }
-    })
-}
 ```

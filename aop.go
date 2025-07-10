@@ -5,8 +5,11 @@ import (
 	"sync"
 )
 
-// 定义拦截器类型
-type Interceptor func(ctx context.Context, next func(ctx context.Context) error) error
+// InterceptorFunc 定义拦截器内部方法
+type InterceptorFunc func(ctx context.Context, req interface{}) (rsp interface{}, err error)
+
+// Interceptor 定义拦截器类型
+type Interceptor func(ctx context.Context, req interface{}, next InterceptorFunc) (rsp interface{}, err error)
 
 var (
 	interceptors []Interceptor
@@ -21,16 +24,16 @@ func Register(interceptor Interceptor) {
 }
 
 // Execute 执行拦截器链
-func Execute(ctx context.Context, target func(ctx context.Context) error) error {
-	var chain func(context.Context) error
+func Execute(ctx context.Context, req interface{}, next InterceptorFunc) (interface{}, error) {
+	var chain InterceptorFunc
 	idx := 0
-	chain = func(c context.Context) error {
+	chain = func(ctx context.Context, req interface{}) (rsp interface{}, err error) {
 		if idx < len(interceptors) {
 			current := interceptors[idx]
 			idx++
-			return current(c, chain)
+			return current(ctx, req, chain)
 		}
-		return target(c)
+		return next(ctx, req)
 	}
-	return chain(ctx)
+	return chain(ctx, req)
 }
